@@ -83,10 +83,8 @@ function stop() {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible' || !savePending) return;
     savePending = false;
-    setTimeout(() => { // 等網路恢復
-        globalThis.toastr?.info('生成在背景完成，補存一次聊天紀錄', '天地無聲勢');
-        SillyTavern.getContext().saveChat(); // 失敗的話 ST 自己會跳紅色通知
-    }, 1500);
+    // 等網路恢復再存；不跳通知，失敗的話 ST 自己會跳紅色通知
+    setTimeout(() => SillyTavern.getContext().saveChat(), 1500);
 });
 
 eventSource.on(event_types.GENERATION_STARTED, start);
