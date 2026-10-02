@@ -29,7 +29,7 @@ https://github.com/obi1005/SillyTavern-TiandiWusheng
 - 生成期間會暫停其他 App 正在播的音樂（iOS 的聲音通道同時只能給一個）。
 - 在鎖定畫面按了暫停，保護就失效。
 - 就算沒收到生成結束的訊號，最多播十分鐘也會自動停止。
-- 目前只在 iPhone 的 Safari 實測過。
+- 目前只在 iPhone 的 Safari 實測過；Android 的 Chrome 尚待實測。
 
 ## English
 

@@ -9,15 +9,18 @@ const { eventSource, event_types, extensionSettings, saveSettingsDebounced } = S
 extensionSettings[MODULE] = Object.assign({ enabled: true }, extensionSettings[MODULE]);
 const settings = extensionSettings[MODULE];
 
-// 現場產生一秒的無聲 WAV（8 kHz、8-bit、單聲道），不必另外附音檔
-function silentWavUrl(rate = 8000) {
-    const buf = new ArrayBuffer(44 + rate);
+// 現場產生一段無聲 WAV（8 kHz、8-bit、單聲道），不必另外附音檔。
+// 長度必須超過 5 秒：Chrome 把 5 秒以下的聲音當成短暫音效，不掛播放通知，也不替頁面撐背景
+// （Chromium media_content_type.cc 的 kMinimumContentDurationSecs = 5）
+function silentWavUrl(seconds = 10, rate = 8000) {
+    const n = seconds * rate;
+    const buf = new ArrayBuffer(44 + n);
     const v = new DataView(buf);
     const tag = (at, s) => [...s].forEach((c, i) => v.setUint8(at + i, c.charCodeAt(0)));
-    tag(0, 'RIFF'); v.setUint32(4, 36 + rate, true); tag(8, 'WAVE');
+    tag(0, 'RIFF'); v.setUint32(4, 36 + n, true); tag(8, 'WAVE');
     tag(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
     v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
-    tag(36, 'data'); v.setUint32(40, rate, true);
+    tag(36, 'data'); v.setUint32(40, n, true);
     new Uint8Array(buf, 44).fill(128); // 8-bit PCM 的靜音值是 128，不是 0
     return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
 }
