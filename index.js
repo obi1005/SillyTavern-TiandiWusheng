@@ -30,6 +30,7 @@ audio.setAttribute('playsinline', '');
 let unlocked = false;
 let running = false;
 let timer = null;
+let savePending = false;
 
 function setStatus(text) {
     const el = document.getElementById('tiandi_status');
@@ -71,8 +72,19 @@ function stop() {
     timer = null;
     audio.pause();
     audio.currentTime = 0;
+    // 生成若在背景結束，ST 緊接著送出的存檔請求可能被 iOS 擋掉。記下來，等切回前景再補存一次
+    if (document.visibilityState === 'hidden') savePending = true;
     setStatus(unlocked ? '收勢，待命中' : '待命中（點一下畫面即可解鎖）');
 }
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible' || !savePending) return;
+    savePending = false;
+    setTimeout(() => { // 等網路恢復
+        globalThis.toastr?.info('生成在背景完成，補存一次聊天紀錄', '天地無聲勢');
+        SillyTavern.getContext().saveChat(); // 失敗的話 ST 自己會跳紅色通知
+    }, 1500);
+});
 
 eventSource.on(event_types.GENERATION_STARTED, start);
 eventSource.on(event_types.GENERATION_ENDED, stop);
@@ -108,4 +120,4 @@ if (box) {
 }
 
 // 除錯用：在瀏覽器主控台可以查看目前狀態
-globalThis.__tiandiWusheng = { audio, get unlocked() { return unlocked; }, get running() { return running; } };
+globalThis.__tiandiWusheng = { audio, get unlocked() { return unlocked; }, get running() { return running; }, get savePending() { return savePending; } };
